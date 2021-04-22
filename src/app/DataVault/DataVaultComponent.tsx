@@ -4,6 +4,7 @@ import DeclarativeDetailsDisplay from './panels/DeclarativeDetailsDisplay'
 import AddDeclarativeDetails from './panels/AddDeclarativeDetails'
 import { DataVaultKey } from '../state/reducers/datavault'
 import { Web3ProviderContext } from '../../providerContext'
+import AddEmail from './panels/AddEmail'
 import CredentialDisplay from './panels/CredentialDisplay'
 import DownloadBackup from './panels/DownloadBackup'
 import { createPresentation } from '../../features/credentials'
@@ -55,6 +56,13 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
             deleteValue={handleDelete}
             swapValue={handleSwap}
             getKeyContent={handleGetKeyContent}
+          />
+        </div>
+      </div>
+      <div className="container">
+        <div className="column">
+          <AddEmail
+            verifier= 'test'
           />
         </div>
       </div>
