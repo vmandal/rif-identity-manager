@@ -12,6 +12,8 @@ import { createPresentation } from '../../features/credentials'
 interface DataVaultComponentProps {
   declarativeDetails: DataVaultKey
   credentials: DataVaultKey
+  address: string
+  chainId: number
   addDeclarativeDetail: (client: DataVaultWebClient, key: string, content: string) => any
   deleteValue: (client: DataVaultWebClient, key: string, id: string) => any
   swapValue: (client: DataVaultWebClient, key: string, content: string, id: string) => any
@@ -20,7 +22,7 @@ interface DataVaultComponentProps {
 }
 
 const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
-  addDeclarativeDetail, declarativeDetails, credentials, deleteValue, swapValue, downloadBackup, getKeyContent
+  addDeclarativeDetail, declarativeDetails, credentials, address, chainId, deleteValue, swapValue, downloadBackup, getKeyContent
 }) => {
   const context = useContext(Web3ProviderContext)
   const dvClient = context.dvClient
@@ -62,7 +64,8 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
       <div className="container">
         <div className="column">
           <AddEmail
-            verifier= 'test'
+            address={address}
+            chainId={chainId}
           />
         </div>
       </div>

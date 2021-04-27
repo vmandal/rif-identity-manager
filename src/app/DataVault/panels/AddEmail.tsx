@@ -2,24 +2,33 @@ import React, { useState } from 'react'
 import { BaseButton } from '../../../components/Buttons'
 import Panel from '../../../components/Panel/Panel'
 import ServerConfig from '../../../config/config.server.json'
+import { createDidFormat, truncateAddressDid } from '../../../formatters'
+import { WebServiceInterface } from '../../../interfaces/webservice.interface'
 
 interface AddEmailInterface {
-  verifier: string
+  address: string
+  chainId: number
+}
+interface ResponseMessage {
+  message: string
 }
 
-const AddEmail: React.FC<AddEmailInterface> = ({ verifier }) => {
+const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   const [isError, setIsError] = useState<string | null>(null)
 
   const [emailAddress, setEmailAddress] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [emailSent, setEmailSent] = useState(false)
   const [error, setError] = useState('')
-  // to do - find logined a/c etc
-  const did = ''
-  // const did = !!account ? createDidFormat(account, chainId) : ''
+  const [headerStatus, setHeaderStatus] = useState(0)
+  const did = createDidFormat(address, chainId)
+
+  const [result, setResult] = useState<WebServiceInterface<ResponseMessage>>({ status: 'init' })
+
   const mailCode = () => {
-    const requestVerification = () => fetch(`${ServerConfig.backUrl}/requestVerification/` + did, {
-      method: 'POST',
+    setResult({ status: 'loading' })
+    fetch(`${ServerConfig.backUrl}/issuer/mailCode/`, {
+      method: 'GET',
       mode: 'cors',
       cache: 'no-cache',
       credentials: 'same-origin',
@@ -27,39 +36,52 @@ const AddEmail: React.FC<AddEmailInterface> = ({ verifier }) => {
         'Content-Type': 'application/json'
       },
       redirect: 'follow',
-      referrerPolicy: 'no-referrer',
-      body: JSON.stringify({ emailAddress })
-    }).then(() => {
+      referrerPolicy: 'no-referrer'
+      // body: JSON.stringify({ emailAddress, did })
+    }).then(response => {
+      console.log('response.status=', response.status)
+      setHeaderStatus(response.status)
+      /*
+      // setResult({ status: 'loaded', payload: response.json() })
+      if (response.status === 400) {
+        throw new Error(response.json().message)
+      }
+      if (!response.ok) {
+        throw new Error('HTTP status ' + response.status)
+      }
+      */
+      return response.json()
+    })
+      .then(function (response) {
+        console.log('response=')
+        console.log(response)
+
+        try {
+          setResult({ status: 'loaded', payload: response })
+        } catch (error) {}
+
+        if (headerStatus === 400) {
+          throw new Error(response.message)
+        } else {
+          setEmailSent(true)
+        }
+      })
+      .catch(handleError)
+    /* .then(() => {
       setEmailSent(true)
-    }).catch(handleError)
+    }) */
   }
 
-  const handleError = (error: Error) => setError(error ? error.message : 'Unhandled error')
+  const handleError = (error: Error) => {
+    console.log('error in call')
+    setError(error ? error.message : 'Unhandled error')
+  }
 
   const verifyCode = () => {
-    /*
-    setIsLoading(true)
-    setIsError(null)
-
-    if (type === '' || content === '') {
-      setIsLoading(false)
-      return setIsError('Type and Content cannot be empty.')
-    }
-
-    addDeclarativeDetail(`DD_${type.toUpperCase()}`, content)
-      .then(() => {
-        setIsLoading(false)
-        setContent('')
-        setType('')
-      })
-      .catch((err: Error) => {
-        setIsLoading(false)
-        setIsError(err.message)
-      })
-      */
+    // to do
   }
 
-  const title = <>Add Email</>
+  const title = <>Add Email | did={did}</>
 
   return (
     <Panel title={title} className="add-email">
@@ -90,6 +112,12 @@ const AddEmail: React.FC<AddEmailInterface> = ({ verifier }) => {
           <p>{isError}</p>
         </div>
       )}
+      {error && (
+        <div className="alert error">
+          <p>{error}</p>
+        </div>
+      )}
+      | status = {result.status} | {result.status === 'loaded' && result.payload}
     </Panel>
   )
 }

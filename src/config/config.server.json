@@ -1,4 +1,4 @@
 {
-    "backUrl": "https://email-verifier.identity.rifos.org/"
+    "backUrl": "http://localhost:3000"
 }
   
