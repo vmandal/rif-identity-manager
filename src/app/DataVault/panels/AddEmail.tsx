@@ -28,7 +28,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   const mailCode = () => {
     setResult({ status: 'loading' })
     fetch(`${ServerConfig.backUrl}/issuer/mailCode/`, {
-      method: 'GET',
+      method: 'POST',
       mode: 'cors',
       cache: 'no-cache',
       credentials: 'same-origin',
@@ -36,8 +36,8 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
         'Content-Type': 'application/json'
       },
       redirect: 'follow',
-      referrerPolicy: 'no-referrer'
-      // body: JSON.stringify({ emailAddress, did })
+      referrerPolicy: 'no-referrer',
+      body: JSON.stringify({ emailAddress, did })
     }).then(response => {
       console.log('response.status=', response.status)
       setHeaderStatus(response.status)
