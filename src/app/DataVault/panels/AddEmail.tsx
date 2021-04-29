@@ -40,36 +40,18 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
       body: JSON.stringify({ emailAddress, did })
     }).then(response => {
       console.log('response.status=', response.status)
-      setHeaderStatus(response.status)
-      /*
-      // setResult({ status: 'loaded', payload: response.json() })
-      if (response.status === 400) {
-        throw new Error(response.json().message)
-      }
+
       if (!response.ok) {
+        response.json().then((jsonData) => {
+          console.log('jsonData=', jsonData)
+          setResult({ status: 'loaded', payload: jsonData })
+          if (result.status === 'loaded') throw new Error(result.payload.message)
+        })
+      } /* else if (!response.ok) {
         throw new Error('HTTP status ' + response.status)
-      }
-      */
-      return response.json()
+      } */
     })
-      .then(function (response) {
-        console.log('response=')
-        console.log(response)
-
-        try {
-          setResult({ status: 'loaded', payload: response })
-        } catch (error) {}
-
-        if (headerStatus === 400) {
-          throw new Error(response.message)
-        } else {
-          setEmailSent(true)
-        }
-      })
       .catch(handleError)
-    /* .then(() => {
-      setEmailSent(true)
-    }) */
   }
 
   const handleError = (error: Error) => {
