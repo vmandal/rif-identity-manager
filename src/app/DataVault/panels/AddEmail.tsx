@@ -115,7 +115,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
     }),
     encryptionManager,
     serviceUrl
-  }).create({ key: 'EmailVerifiableCredential2', content: jwt })
+  }).create({ key: 'EmailVerifiableCredential', content: jwt })
     .then((response) => {
       console.log(response)
       setMessage('Email Verifiable Credential saved')
