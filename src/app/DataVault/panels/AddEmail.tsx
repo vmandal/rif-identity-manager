@@ -24,9 +24,9 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   const mailCode = () => {
     setError('')
     setMessage('')
-    console.log('calling: ', `${ServerConfig.backUrl}/issuer/mailCode/`)
+    // console.log('calling: ', `${ServerConfig.issuerServerUrl}/issuer/mailCode/`)
     let headerStatus = 0
-    fetch(`${ServerConfig.backUrl}/issuer/mailCode/`, {
+    fetch(`${ServerConfig.issuerServerUrl}/issuer/mailCode/`, {
       method: 'POST',
       mode: 'cors',
       cache: 'no-cache',
@@ -71,10 +71,9 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   const issuerAddMail = (msg: string, sig: string) => {
     setError('')
     setMessage('')
-    console.log('calling: ', `${ServerConfig.backUrl}/issuer/AddMail/`, { code: emailCode, did, sig })
 
     let headerStatus = 0
-    fetch(`${ServerConfig.backUrl}/issuer/AddMail/`, {
+    fetch(`${ServerConfig.issuerServerUrl}/issuer/AddMail/`, {
       method: 'POST',
       mode: 'cors',
       cache: 'no-cache',
@@ -101,7 +100,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
       .catch(handleError)
   }
 
-  const serviceUrl = 'https://data-vault.identity.rifos.org'
+  const serviceUrl = ServerConfig.dataVaultUrl
 
   const getEncryptionManager = async (provider: any) => {
     if (provider.isMetaMask && !provider.isNiftyWallet) return await AsymmetricEncryptionManager.fromWeb3Provider(provider)
@@ -116,7 +115,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
     }),
     encryptionManager,
     serviceUrl
-  }).create({ key: 'EmailVerifiableCredential', content: jwt })
+  }).create({ key: 'EmailVerifiableCredential2', content: jwt })
     .then((response) => {
       console.log(response)
       setMessage('Email Verifiable Credential saved')
