@@ -5,6 +5,7 @@ import AddDeclarativeDetails from './panels/AddDeclarativeDetails'
 import { DataVaultKey } from '../state/reducers/datavault'
 import { Web3ProviderContext } from '../../providerContext'
 import AddEmail from './panels/AddEmail'
+import AddSms from './panels/AddSms'
 import CredentialDisplay from './panels/CredentialDisplay'
 import DownloadBackup from './panels/DownloadBackup'
 import { createPresentation } from '../../features/credentials'
@@ -64,6 +65,14 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
       <div className="container">
         <div className="column">
           <AddEmail
+            address={address}
+            chainId={chainId}
+          />
+        </div>
+      </div>
+      <div className="container">
+        <div className="column">
+          <AddSms
             address={address}
             chainId={chainId}
           />

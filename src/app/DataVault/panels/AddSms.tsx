@@ -6,27 +6,26 @@ import { createDidFormat } from '../../../formatters'
 import { Web3ProviderContext } from '../../../providerContext'
 import DataVaultWebClient, { AuthManager, AsymmetricEncryptionManager, SignerEncryptionManager } from '@rsksmart/ipfs-cpinner-client'
 
-interface AddEmailInterface {
+interface AddSMSInterface {
   address: string
   chainId: number
 }
 
-const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
+const AddSms: React.FC<AddSMSInterface> = ({ address, chainId }) => {
   const [message, setMessage] = useState('')
-  const [email, setEmail] = useState('')
-  const [emailCode, setEmailCode] = useState('')
-  const [emailSent, setEmailSent] = useState(false)
+  const [mobile, setMobile] = useState('')
+  const [smsCode, setSmsCode] = useState('')
+  const [smsSent, setSmsSent] = useState(false)
   const [error, setError] = useState('')
   const [jwt, setJwt] = useState('')
   const did = createDidFormat(address, chainId)
   const context = useContext(Web3ProviderContext)
 
-  const mailCode = () => {
-    setError('')
-    setMessage('')
-    // console.log('calling: ', `${ServerConfig.issuerServerUrl}/issuer/mailCode/`)
+  const sendSms = () => {
+    setError(''); setMessage('')
+
     let headerStatus = 0
-    fetch(`${ServerConfig.issuerServerUrl}/issuer/mailCode/`, {
+    fetch(`${ServerConfig.issuerServerUrl}/issuer/smsCode/`, {
       method: 'POST',
       mode: 'cors',
       cache: 'no-cache',
@@ -36,7 +35,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
       },
       redirect: 'follow',
       referrerPolicy: 'no-referrer',
-      body: JSON.stringify({ email, did })
+      body: JSON.stringify({ mobile, did })
     }).then(response => {
       headerStatus = response.status
       return response
@@ -46,7 +45,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
           throw new Error(responseJson.message)
         } else {
           setMessage(responseJson.message)
-          setEmailSent(true)
+          setSmsSent(true)
         }
       })
       .catch(handleError)
@@ -60,20 +59,19 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
     setError('')
     setMessage('')
 
-    const msg = `code:${emailCode}`
+    const msg = `code:${smsCode}`
     context.provider.request({
       method: 'personal_sign',
       params: [msg, address]
-    }).then((sig: string) => { issuerAddMail(msg, sig) })
+    }).then((sig: string) => { issuerAddMobile(msg, sig) })
       .catch((error: any) => { setError(error.message) })
   }
 
-  const issuerAddMail = (msg: string, sig: string) => {
-    setError('')
-    setMessage('')
+  const issuerAddMobile = (msg: string, sig: string) => {
+    setError(''); setMessage('')
 
     let headerStatus = 0
-    fetch(`${ServerConfig.issuerServerUrl}/issuer/AddMail/`, {
+    fetch(`${ServerConfig.issuerServerUrl}/issuer/AddMobile/`, {
       method: 'POST',
       mode: 'cors',
       cache: 'no-cache',
@@ -107,46 +105,51 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
     return await SignerEncryptionManager.fromWeb3Provider(provider)
   }
 
-  const saveInDataVault = () => getEncryptionManager(context.provider).then((encryptionManager) => new DataVaultWebClient({
-    authManager: new AuthManager({
-      did,
-      serviceUrl,
-      personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
-    }),
-    encryptionManager,
-    serviceUrl
-  }).create({ key: 'EmailVerifiableCredential', content: jwt })
-    .then((response) => {
-      // console.log(response)
-      setMessage('Email Verifiable Credential saved')
-      setEmail(''); setJwt('')
-    })
-  ).catch(handleError)
+  const saveInDataVault = () => {
+    setError(''); setMessage(''); setMobile(''); setSmsCode('')
 
-  const title = <>Add Email Credential</>
+    getEncryptionManager(context.provider).then((encryptionManager) => new DataVaultWebClient({
+      authManager: new AuthManager({
+        did,
+        serviceUrl,
+        personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
+      }),
+      encryptionManager,
+      serviceUrl
+    }).create({ key: 'SmsVerifiableCredential', content: jwt })
+      .then((response) => {
+        console.log(response)
+        setMessage('SMS Verifiable Credential saved')
+        setSmsCode('')
+        setJwt('')
+      })
+    ).catch(handleError)
+  }
+
+  const title = <>Add SMS Credential</>
 
   return (
-    <Panel title={title} className="add-email">
+    <Panel title={title} className="add-mobile">
       <div className="container">
         <div className="column">
           <input type="text"
             className="line type"
-            onChange={(evt) => setEmail(evt.target.value)}
-            disabled={emailSent}
-            placeholder="Email" />
+            onChange={(evt) => setMobile(evt.target.value)}
+            disabled={smsSent}
+            placeholder="Mobile number" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={mailCode} disabled={emailSent}>Send code</BaseButton>
+          <BaseButton className="submit turquoise" onClick={sendSms} disabled={smsSent}>Send code</BaseButton>
         </div>
         <div className="column">
           <input type="text"
             className="line type"
-            onChange={(evt) => { setEmailCode(evt.target.value); setJwt('') }}
-            disabled={!emailSent}
+            onChange={(evt) => { setSmsCode(evt.target.value); setJwt('') }}
+            disabled={!smsSent}
             placeholder="Enter code" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!emailSent || (jwt !== '') }>Verify</BaseButton>
+          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!smsSent || (jwt !== '') }>Verify</BaseButton>
         </div>
         <div className="column submitColumn">
           <BaseButton className="submit turquoise" onClick={saveInDataVault} disabled={!jwt}>Save</BaseButton>
@@ -166,4 +169,4 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   )
 }
 
-export default AddEmail
+export default AddSms
