@@ -9,9 +9,10 @@ import DataVaultWebClient, { AuthManager, AsymmetricEncryptionManager, SignerEnc
 interface AddEmailInterface {
   address: string
   chainId: number
+  updateContent: (key: string, content: string, id: string) => Promise<any>
 }
 
-const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
+const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId, updateContent }) => {
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -22,9 +23,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   const context = useContext(Web3ProviderContext)
 
   const mailCode = () => {
-    setError('')
-    setMessage('')
-    // console.log('calling: ', `${ServerConfig.issuerServerUrl}/issuer/mailCode/`)
+    setError(''); setMessage('')
     let headerStatus = 0
     fetch(`${ServerConfig.issuerServerUrl}/issuer/mailCode/`, {
       method: 'POST',
@@ -57,9 +56,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   }
 
   const verifyCode = () => {
-    setError('')
-    setMessage('')
-
+    setError(''); setMessage('')
     const msg = `code:${emailCode}`
     context.provider.request({
       method: 'personal_sign',
@@ -69,9 +66,7 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
   }
 
   const issuerAddMail = (msg: string, sig: string) => {
-    setError('')
-    setMessage('')
-
+    setError(''); setMessage('')
     let headerStatus = 0
     fetch(`${ServerConfig.issuerServerUrl}/issuer/AddMail/`, {
       method: 'POST',
@@ -89,7 +84,6 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
       return response
     }).then(response => response.json())
       .then(responseJson => {
-        console.log('responseJson=', responseJson)
         if (headerStatus !== 200) {
           throw new Error(responseJson.message)
         } else {
@@ -107,21 +101,28 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
     return await SignerEncryptionManager.fromWeb3Provider(provider)
   }
 
-  const saveInDataVault = () => getEncryptionManager(context.provider).then((encryptionManager) => new DataVaultWebClient({
-    authManager: new AuthManager({
-      did,
-      serviceUrl,
-      personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
-    }),
-    encryptionManager,
-    serviceUrl
-  }).create({ key: 'EmailVerifiableCredential', content: jwt })
-    .then((response) => {
-      // console.log(response)
-      setMessage('Email Verifiable Credential saved')
-      setEmail(''); setJwt('')
-    })
-  ).catch(handleError)
+  const saveInDataVault = () => {
+    setError(''); setMessage('')
+
+    getEncryptionManager(context.provider).then((encryptionManager) => {
+      const client = new DataVaultWebClient({
+        authManager: new AuthManager({
+          did,
+          serviceUrl,
+          personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
+        }),
+        encryptionManager,
+        serviceUrl
+      })
+      client.create({ key: 'EmailVerifiableCredential', content: jwt })
+        .then((response) => {
+          setMessage('Email Verifiable Credential saved')
+          updateContent('EmailVerifiableCredential', jwt, response.id)
+          setJwt(''); setEmail(''); setEmailCode(''); setEmailSent(false) // reset
+        })
+      return client
+    }).catch(handleError)
+  }
 
   const title = <>Add Email Credential</>
 
@@ -133,20 +134,22 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId }) => {
             className="line type"
             onChange={(evt) => setEmail(evt.target.value)}
             disabled={emailSent}
+            value={email}
             placeholder="Email" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={mailCode} disabled={emailSent}>Send code</BaseButton>
+          <BaseButton className="submit turquoise" onClick={mailCode} disabled={emailSent}>Send</BaseButton>
         </div>
         <div className="column">
           <input type="text"
             className="line type"
             onChange={(evt) => { setEmailCode(evt.target.value); setJwt('') }}
             disabled={!emailSent}
+            value={emailCode}
             placeholder="Enter code" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!emailSent || (jwt !== '') }>Verify</BaseButton>
+          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!emailSent || (jwt !== '') || (emailCode === '')}>Verify</BaseButton>
         </div>
         <div className="column submitColumn">
           <BaseButton className="submit turquoise" onClick={saveInDataVault} disabled={!jwt}>Save</BaseButton>

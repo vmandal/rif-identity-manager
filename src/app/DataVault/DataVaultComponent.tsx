@@ -20,10 +20,11 @@ interface DataVaultComponentProps {
   swapValue: (client: DataVaultWebClient, key: string, content: string, id: string) => any
   downloadBackup: (client: DataVaultWebClient) => any
   getKeyContent: (client: DataVaultWebClient, key: string) => any
+  updateContent: (client: DataVaultWebClient, key: string, content: string, id: string) => any
 }
 
 const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
-  addDeclarativeDetail, declarativeDetails, credentials, address, chainId, deleteValue, swapValue, downloadBackup, getKeyContent
+  addDeclarativeDetail, declarativeDetails, credentials, address, chainId, deleteValue, swapValue, downloadBackup, getKeyContent, updateContent
 }) => {
   const context = useContext(Web3ProviderContext)
   const dvClient = context.dvClient
@@ -42,6 +43,7 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
   const handleSwap = (key: string, content: string, id: string) => swapValue(dvClient, key, content, id)
   const handleDownload = () => context.dvClient && downloadBackup(dvClient)
   const handleGetKeyContent = (key: string) => getKeyContent(dvClient, key)
+  const handleUpdateContent = (key: string, content: string, id: string) => updateContent(dvClient, key, content, id)
 
   return (
     <div className="content data-vault">
@@ -67,6 +69,7 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
           <AddEmail
             address={address}
             chainId={chainId}
+            updateContent={handleUpdateContent}
           />
         </div>
       </div>
@@ -75,6 +78,7 @@ const DataVaultComponent: React.FC<DataVaultComponentProps> = ({
           <AddSms
             address={address}
             chainId={chainId}
+            updateContent={handleUpdateContent}
           />
         </div>
       </div>

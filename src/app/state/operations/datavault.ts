@@ -63,6 +63,10 @@ export const createDataVaultContent = (client: DataVaultWebClient, key: string, 
     .then((result: CreateContentResponse) => result.id)
     .then((id: string) => dispatch(addContentToKey({ key, content: { id, content } })))
 
+export const updateDataVaultContent = (client: DataVaultWebClient, key: string, content: string, id: string) => (dispatch: Dispatch<any>) => {
+  dispatch(addContentToKey({ key, content: { id, content } }))
+}
+
 /**
  * Delete item from the datavault with its key and id
  * @param client DataVault client

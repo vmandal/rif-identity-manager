@@ -9,9 +9,10 @@ import DataVaultWebClient, { AuthManager, AsymmetricEncryptionManager, SignerEnc
 interface AddSMSInterface {
   address: string
   chainId: number
+  updateContent: (key: string, content: string, id: string) => Promise<any>
 }
 
-const AddSms: React.FC<AddSMSInterface> = ({ address, chainId }) => {
+const AddSms: React.FC<AddSMSInterface> = ({ address, chainId, updateContent }) => {
   const [message, setMessage] = useState('')
   const [mobile, setMobile] = useState('')
   const [smsCode, setSmsCode] = useState('')
@@ -118,10 +119,9 @@ const AddSms: React.FC<AddSMSInterface> = ({ address, chainId }) => {
       serviceUrl
     }).create({ key: 'SmsVerifiableCredential', content: jwt })
       .then((response) => {
-        console.log(response)
         setMessage('SMS Verifiable Credential saved')
-        setSmsCode('')
-        setJwt('')
+        updateContent('SmsVerifiableCredential', jwt, response.id)
+        setJwt(''); setMobile(''); setSmsCode(''); setSmsSent(false) // reset
       })
     ).catch(handleError)
   }
@@ -136,20 +136,22 @@ const AddSms: React.FC<AddSMSInterface> = ({ address, chainId }) => {
             className="line type"
             onChange={(evt) => setMobile(evt.target.value)}
             disabled={smsSent}
+            value={mobile}
             placeholder="Mobile number" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={sendSms} disabled={smsSent}>Send code</BaseButton>
+          <BaseButton className="submit turquoise" onClick={sendSms} disabled={smsSent}>Send</BaseButton>
         </div>
         <div className="column">
           <input type="text"
             className="line type"
             onChange={(evt) => { setSmsCode(evt.target.value); setJwt('') }}
             disabled={!smsSent}
+            value={smsCode}
             placeholder="Enter code" />
         </div>
         <div className="column submitColumn">
-          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!smsSent || (jwt !== '') }>Verify</BaseButton>
+          <BaseButton className="submit turquoise" onClick={verifyCode} disabled={!smsSent || (jwt !== '') || (smsCode === '')}>Verify</BaseButton>
         </div>
         <div className="column submitColumn">
           <BaseButton className="submit turquoise" onClick={saveInDataVault} disabled={!jwt}>Save</BaseButton>
