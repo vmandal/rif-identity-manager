@@ -4,7 +4,7 @@ import DataVaultWebClient from '@rsksmart/ipfs-cpinner-client'
 import { stateInterface } from '../state/configureStore'
 import DataVaultComponent from './DataVaultComponent'
 import { AnyAction } from 'redux'
-import { createDataVaultContent, deleteDataVaultContent, swapDataVaultContent, downloadBackup, getDataVaultContent, updateDataVaultContent } from '../state/operations/datavault'
+import { createDataVaultContent, deleteDataVaultContent, swapDataVaultContent, downloadBackup, getDataVaultContent } from '../state/operations/datavault'
 
 const mapStateToProps = (state: stateInterface) => ({
   declarativeDetails: state.datavault.declarativeDetails,
@@ -23,8 +23,8 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<stateInterface, {}, AnyActio
   downloadBackup: (client: DataVaultWebClient) => downloadBackup(client),
   getKeyContent: (client: DataVaultWebClient, key: string) =>
     dispatch(getDataVaultContent(client, key)),
-  updateContent: (client: DataVaultWebClient, key: string, content: string, id: string) =>
-    dispatch(updateDataVaultContent(client, key, content, id))
+  addVerifiedCredentials: (client: DataVaultWebClient, key: string, content: string) =>
+    dispatch(createDataVaultContent(client, key, content))
 })
 
 const mergeProps = (stateProps: any, dispatchProps: any, ownProps: any) => ({

@@ -4,15 +4,14 @@ import Panel from '../../../components/Panel/Panel'
 import ServerConfig from '../../../config/config.server.json'
 import { createDidFormat } from '../../../formatters'
 import { Web3ProviderContext } from '../../../providerContext'
-import DataVaultWebClient, { AuthManager, AsymmetricEncryptionManager, SignerEncryptionManager } from '@rsksmart/ipfs-cpinner-client'
 
 interface AddEmailInterface {
   address: string
   chainId: number
-  updateContent: (key: string, content: string, id: string) => Promise<any>
+  addVerifiedCredentials: (key: string, content: string) => Promise<any>
 }
 
-const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId, updateContent }) => {
+const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId, addVerifiedCredentials }) => {
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -94,34 +93,15 @@ const AddEmail: React.FC<AddEmailInterface> = ({ address, chainId, updateContent
       .catch(handleError)
   }
 
-  const serviceUrl = ServerConfig.dataVaultUrl
-
-  const getEncryptionManager = async (provider: any) => {
-    if (provider.isMetaMask && !provider.isNiftyWallet) return await AsymmetricEncryptionManager.fromWeb3Provider(provider)
-    return await SignerEncryptionManager.fromWeb3Provider(provider)
-  }
-
   const saveInDataVault = () => {
     setError(''); setMessage('')
-
-    getEncryptionManager(context.provider).then((encryptionManager) => {
-      const client = new DataVaultWebClient({
-        authManager: new AuthManager({
-          did,
-          serviceUrl,
-          personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
-        }),
-        encryptionManager,
-        serviceUrl
+    addVerifiedCredentials('EmailVerifiableCredential', jwt)
+      .then(() => {
+        setJwt(''); setEmail(''); setEmailCode(''); setEmailSent(false) // reset
       })
-      client.create({ key: 'EmailVerifiableCredential', content: jwt })
-        .then((response) => {
-          setMessage('Email Verifiable Credential saved')
-          updateContent('EmailVerifiableCredential', jwt, response.id)
-          setJwt(''); setEmail(''); setEmailCode(''); setEmailSent(false) // reset
-        })
-      return client
-    }).catch(handleError)
+      .catch((err: Error) => {
+        setError(err.message)
+      })
   }
 
   const title = <>Add Email Credential</>

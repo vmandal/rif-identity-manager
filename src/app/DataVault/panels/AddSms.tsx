@@ -4,15 +4,14 @@ import Panel from '../../../components/Panel/Panel'
 import ServerConfig from '../../../config/config.server.json'
 import { createDidFormat } from '../../../formatters'
 import { Web3ProviderContext } from '../../../providerContext'
-import DataVaultWebClient, { AuthManager, AsymmetricEncryptionManager, SignerEncryptionManager } from '@rsksmart/ipfs-cpinner-client'
 
 interface AddSMSInterface {
   address: string
   chainId: number
-  updateContent: (key: string, content: string, id: string) => Promise<any>
+  addVerifiedCredentials: (key: string, content: string) => Promise<any>
 }
 
-const AddSms: React.FC<AddSMSInterface> = ({ address, chainId, updateContent }) => {
+const AddSms: React.FC<AddSMSInterface> = ({ address, chainId, addVerifiedCredentials }) => {
   const [message, setMessage] = useState('')
   const [mobile, setMobile] = useState('')
   const [smsCode, setSmsCode] = useState('')
@@ -99,31 +98,15 @@ const AddSms: React.FC<AddSMSInterface> = ({ address, chainId, updateContent }) 
       .catch(handleError)
   }
 
-  const serviceUrl = ServerConfig.dataVaultUrl
-
-  const getEncryptionManager = async (provider: any) => {
-    if (provider.isMetaMask && !provider.isNiftyWallet) return await AsymmetricEncryptionManager.fromWeb3Provider(provider)
-    return await SignerEncryptionManager.fromWeb3Provider(provider)
-  }
-
   const saveInDataVault = () => {
-    setError(''); setMessage(''); setMobile(''); setSmsCode('')
-
-    getEncryptionManager(context.provider).then((encryptionManager) => new DataVaultWebClient({
-      authManager: new AuthManager({
-        did,
-        serviceUrl,
-        personalSign: (data: string) => context.provider!.request({ method: 'personal_sign', params: [data, address] })
-      }),
-      encryptionManager,
-      serviceUrl
-    }).create({ key: 'SmsVerifiableCredential', content: jwt })
-      .then((response) => {
-        setMessage('SMS Verifiable Credential saved')
-        updateContent('SmsVerifiableCredential', jwt, response.id)
+    setError(''); setMessage('')
+    addVerifiedCredentials('SmsVerifiableCredential', jwt)
+      .then(() => {
         setJwt(''); setMobile(''); setSmsCode(''); setSmsSent(false) // reset
       })
-    ).catch(handleError)
+      .catch((err: Error) => {
+        setError(err.message)
+      })
   }
 
   const title = <>Add SMS Credential</>
